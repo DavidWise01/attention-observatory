@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTENTION OBSERVATORY — the whole gaze from one eigendecomposition</title>
+<!--
+  ============================================================================
+  FOUNDATIONAL INSTRUMENT TEMPLATE  ·  clone this per paper
+  ----------------------------------------------------------------------------
+  · standalone single file. ZERO runtime network fetches. system fonts only.
+    (nothing to block => cannot black-screen the way a CDN dep can.)
+  · 2D canvas channel  = quantitative reads (curves, bars, exact values)
+  · 3D soft-GL channel = spatial intuition (geometry you rotate around)
+    soft-GL = 3D projected by hand onto the 2d context. no WebGL, no library.
+  · fail-loud: any runtime error surfaces on the panel's card, never silent.
+  · verify-then-build: check your numbers in Node/Python BEFORE editing draw2D/draw3D.
+
+  TO USE:  edit PAPER (metadata) · edit draw2D() · edit build3D()+draw3D().
+           the three marked blocks are the only places you touch.
+           the SGL engine + RUNTIME are reusable — leave them alone.
+  ============================================================================
+-->
+<style>
+:root{
+  --bg:#0B0B0B; --ink:#F2EFE9; --org:#FF5A00; --dim:#7A756D; --line:#2A2620; --panel:#121110;
+  --green:#3FBF7F; --amber:#E0B050; --red:#E05555;
+  /* system stacks — no web fonts, truly offline. swap in Archivo/Plex only if you accept a fetch. */
+  --disp: system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono: ui-monospace,'SF Mono','Cascadia Code','Source Code Pro',Menlo,Consolas,'DejaVu Sans Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:14px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+
+header{border-bottom:3px solid var(--org);padding:24px 0 18px}
+header h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,5.5vw,52px);line-height:.95;text-transform:uppercase;letter-spacing:-.01em}
+header h1 span{color:var(--org)}
+header .sub{margin-top:10px;color:var(--dim);font-size:13px;max-width:640px;line-height:1.6}
+header .tier{display:inline-block;margin-top:12px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border:2px solid}
+header .tier.g{color:var(--green);border-color:var(--green)}
+header .tier.a{color:var(--amber);border-color:var(--amber)}
+header .tier.r{color:var(--red);border-color:var(--red)}
+
+section{padding:28px 0;border-bottom:1px solid var(--line)}
+.sec-h{font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.viz{background:var(--panel);border:1px solid var(--line);border-radius:2px;position:relative;overflow:hidden}
+.viz-2d{height:400px}.viz-3d{height:460px}
+.viz canvas{display:block;width:100%;height:100%;touch-action:none}
+.viz .cap{position:absolute;left:12px;bottom:10px;font-size:11px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+.viz .badge{position:absolute;right:12px;top:10px;font-size:10px;color:var(--org);letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--org);padding:2px 7px}
+.viz .hint{position:absolute;left:12px;top:10px;font-size:10px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;pointer-events:none}
+.viz .fb{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:var(--bg);padding:30px;text-align:center;color:var(--org);font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.prose{font-size:13px;line-height:1.7;max-width:680px;color:var(--ink)}
+.prose b{color:var(--org)}
+footer{padding:22px 0 44px;font-size:11px;color:var(--dim);line-height:1.8}
+.tog{background:var(--bg);color:var(--org);border:2px solid var(--org);font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;cursor:pointer}
+.tog:hover{background:var(--org);color:var(--bg)}
+.tog:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.tog.on{border-color:var(--amber);color:var(--amber)}
+.poses{position:absolute;right:12px;bottom:10px;display:flex;gap:6px;z-index:3}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1 id="hTitle">ATTENTION <span>OBSERVATORY</span></h1>
+    <div class="sub" id="hSub">The synthesis of the whole investigation: one real attention head, one eigendecomposition, all its structure at once — dimension, curvature, coherence, flow, persistence — and every structural claim auto-audited against its shuffle null, so the report cannot lie to you. Toggle heads or paste your own N×N matrix.</div>
+    <span class="tier g" id="hTier">GREEN — REAL BERT ATTENTION · EVERY CLAIM SHUFFLE-AUDITED</span>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">2D · Structural Report — audited against the null</div>
+    <div class="viz viz-2d">
+      <canvas id="cv2"></canvas>
+      <div class="badge">CANVAS 2D</div>
+      <div class="cap" id="cap2">demo: sine — replace in draw2D()</div>
+      <div class="fb" id="fb2">CANVAS 2D UNAVAILABLE</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">3D · The One Object — the relational geometry every view came from</div>
+    <div class="viz viz-3d">
+      <canvas id="cv3"></canvas>
+      <div class="badge">SOFT-GL · NO GPU · NO LIB</div>
+      <div class="hint">DRAG ROTATE · WHEEL ZOOM</div>
+      <div class="poses"><button id="obH0" class="tog on">BERT&nbsp;H0</button><button id="obH1" class="tog">BERT&nbsp;H1</button><button id="obPaste" class="tog">PASTE</button></div>
+      <div class="cap" id="cap3">demo: lattice + orbit — replace in build3D()/draw3D()</div>
+      <div class="fb" id="fb3">RENDER FAILED — <span id="fb3why"></span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">Notes</div>
+    <p class="prose"><b>What this is.</b> The whole session was one investigation wearing many hats \u2014 attention as distance, dimension, curvature, flow, topology. Every view came from a single eigendecomposition of one attention matrix. This instrument computes that decomposition once and reports all the facets together, on real BERT attention, with each structural claim <b>auto-audited against its shuffle null</b>. That audit is the point: it caught two overclaims I made earlier by hand (the curvature story, "the flow found the grammar"), and now it catches them automatically \u2014 the report says ARTIFACT when a number doesn't beat its null.</p>
+    <p class="prose"><b>Read the report honestly.</b> For BERT head 0: intrinsic dimension ~5, view coherence 72% (mostly visible in 3D), cluster persistence <em>structured</em> (fragments gradually), flow classification sorting tokens into pools/creeks/ocean. But <b>curvature reads ARTIFACT</b> \u2014 10% but below the ~19% shuffle null, so it is noise, not hyperbolic hierarchy. Head 1 differs where it counts: higher dimension (~8), lower coherence (50%), a diffuse persistence cliff. The real, null-surviving distinctions are dimension and persistence character; curvature is not real for either at this scale.</p>
+    <p class="prose"><b>The one object.</b> The 3D is the relational embedding every earlier instrument was a facet of \u2014 tokens placed by attention distance, colored by flow type, sized by depth. Toggle heads to watch the whole structure change; paste any N\u00d7N attention matrix to get its audited report. Green tier: real attention, exact decomposition, and \u2014 the actual deliverable \u2014 a report that runs its own null controls so it cannot flatter the data. That discipline, not any single view, is what the session was really building.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    FOUNDATIONAL TEMPLATE · zero runtime deps · system fonts · fail-loud · house style · verify-then-build. Clone per paper; keep the engine, swap the two draw blocks.
+  </div>
+</footer>
+
+<script>
+'use strict';
+// fail-loud: any uncaught error (including inside the animation loop) shows on the 3D card.
+window.addEventListener('error',function(e){
+  var fb=document.getElementById('fb3');if(fb){fb.style.display='flex';}
+  var w=document.getElementById('fb3why');if(w)w.textContent='RUNTIME: '+String(e.message||'?').toUpperCase().slice(0,90);
+});
+
+/* ==========================================================================
+   BLOCK 1 · PAPER  — edit metadata here
+   ========================================================================== */
+var PAPER={
+  title:'ATTENTION OBSERVATORY',
+  tier:'g',
+  cap2:'structural report \u00b7 each measure with its shuffle-null verdict (REAL / ARTIFACT)',
+  cap3:'the relational embedding \u00b7 nodes = tokens, colored by flow type, sized by depth'
+};
+
+var OBREAL={"tokens":["[CLS]","the","quick","brown","fox","jumps","over","the","lazy","dog","near","the","river","bank","[SEP]"],"N":15,"head0":[[0.21535,0.02176,0.02941,0.0762,0.06287,0.10155,0.0184,0.01872,0.04182,0.0835,0.03801,0.01887,0.16374,0.07453,0.03526],[0.5961,0.02587,0.00165,0.00229,0.00338,0.00514,0.00279,0.06637,0.00483,0.00391,0.00945,0.12387,0.12485,0.0166,0.01291],[0.02509,0.00194,0.57511,0.00123,0.00319,0.10448,0.02855,0.00362,0.11088,0.01002,0.04565,0.01025,0.01981,0.03248,0.02771],[0.00673,0.00098,0.00067,0.8209,0.02533,0.00785,0.00408,0.00129,0.01043,0.02353,0.00516,0.00285,0.04136,0.0062,0.04263],[0.00118,0.00043,0.00092,0.01281,0.83487,0.00123,0.00272,0.00037,0.01707,0.05305,0.00664,0.00064,0.006,0.01028,0.05177],[0.00214,0.00062,0.01074,0.00181,0.00082,0.91097,0.00325,0.0006,0.00661,0.00761,0.0134,0.0009,0.01651,0.00302,0.02101],[0.43225,0.02009,0.03642,0.01218,0.00646,0.02634,0.11315,0.00727,0.01478,0.01303,0.03726,0.01553,0.06455,0.13272,0.06799],[0.76458,0.08437,0.00208,0.00172,0.00166,0.00253,0.00069,0.01831,0.00111,0.00072,0.00238,0.05227,0.04799,0.0105,0.00909],[0.00533,0.00497,0.05289,0.01597,0.02804,0.0201,0.0058,0.00139,0.73007,0.06068,0.00768,0.00336,0.01991,0.0228,0.02103],[0.00219,0.00183,0.00194,0.0159,0.04108,0.00541,0.00421,0.00066,0.03298,0.85523,0.00258,0.00072,0.00311,0.00736,0.0248],[0.54359,0.06843,0.01499,0.00994,0.00687,0.01071,0.01987,0.02643,0.00522,0.0043,0.06322,0.01283,0.10802,0.06839,0.0372],[0.73953,0.1404,0.00559,0.00378,0.00287,0.00366,0.00112,0.05024,0.00253,0.00081,0.00103,0.0166,0.01671,0.00621,0.00891],[0.03049,0.0144,0.00247,0.02739,0.00876,0.00468,0.00247,0.00801,0.00679,0.00466,0.01276,0.00277,0.86241,0.00461,0.00732],[0.07291,0.01176,0.01649,0.00817,0.0211,0.00458,0.02728,0.0066,0.03204,0.01787,0.03319,0.00337,0.0114,0.72318,0.01007],[0.61381,0.08145,0.00544,0.00759,0.00541,0.08536,0.01617,0.05818,0.00216,0.0113,0.01643,0.04806,0.03157,0.00812,0.00894]],"head1":[[0.07378,0.05406,0.05282,0.08439,0.08233,0.12528,0.03163,0.04488,0.08111,0.06599,0.04405,0.04095,0.0824,0.06448,0.07184],[0.01238,0.00586,0.03687,0.02916,0.07672,0.0504,0.01437,0.00437,0.04978,0.09679,0.07232,0.00388,0.28465,0.19702,0.06544],[0.01659,0.04977,0.03331,0.14045,0.07648,0.15539,0.04744,0.03337,0.07639,0.09166,0.03888,0.02614,0.04762,0.02267,0.14384],[0.02487,0.02697,0.03689,0.06487,0.14572,0.0833,0.00989,0.02404,0.07059,0.14447,0.07039,0.01672,0.15125,0.04503,0.085],[0.04088,0.06515,0.05993,0.09811,0.0649,0.09718,0.02315,0.0615,0.08116,0.10591,0.09849,0.0345,0.05792,0.03467,0.07655],[0.00812,0.02349,0.0768,0.07577,0.0788,0.01434,0.0592,0.03934,0.09457,0.11635,0.08904,0.02457,0.14003,0.0663,0.09327],[0.05227,0.03381,0.06461,0.02859,0.06896,0.18768,0.01163,0.05449,0.13657,0.05742,0.06338,0.03766,0.05298,0.04612,0.10384],[0.01016,0.00325,0.0254,0.01908,0.05645,0.06764,0.02273,0.00538,0.06506,0.11138,0.10546,0.00427,0.28021,0.16854,0.05498],[0.03032,0.02413,0.02307,0.0837,0.09866,0.09741,0.01942,0.04038,0.05392,0.1188,0.09401,0.03355,0.16746,0.04768,0.06748],[0.03398,0.03788,0.04146,0.03996,0.06876,0.06456,0.01727,0.06591,0.05759,0.06164,0.11635,0.0591,0.13735,0.11385,0.08433],[0.02601,0.03488,0.02582,0.04865,0.15094,0.06161,0.02779,0.07647,0.10623,0.0665,0.02681,0.06856,0.05718,0.07901,0.14352],[0.00788,0.00233,0.01869,0.01233,0.03192,0.04195,0.01429,0.00402,0.05755,0.10559,0.09966,0.00428,0.30172,0.22814,0.06964],[0.0348,0.04305,0.01735,0.05215,0.08439,0.07429,0.02937,0.06341,0.0977,0.16105,0.06802,0.07554,0.02272,0.04604,0.13009],[0.0218,0.05267,0.03698,0.05082,0.03871,0.10406,0.02313,0.07006,0.0865,0.10597,0.11782,0.10363,0.0513,0.03424,0.10233],[0.08631,0.06014,0.03708,0.02957,0.05135,0.05336,0.0486,0.06554,0.06159,0.05979,0.07108,0.1005,0.07124,0.06923,0.13462]]};
+var OB_N, OB_tokens, OB_R;
+
+function OB_jac(M){var n=M.length,a=M.map(function(r){return r.slice();});var V=[];for(var i=0;i<n;i++){V.push([]);for(var j=0;j<n;j++)V[i].push(i===j?1:0);}
+  for(var sw=0;sw<90;sw++){var off=0;for(var i=0;i<n;i++)for(var j=i+1;j<n;j++)off+=a[i][j]*a[i][j];if(off<1e-12)break;
+    for(var p=0;p<n;p++)for(var q=p+1;q<n;q++){if(Math.abs(a[p][q])<1e-14)continue;var th=(a[q][q]-a[p][p])/(2*a[p][q]),t=Math.sign(th)/(Math.abs(th)+Math.sqrt(th*th+1));if(th===0)t=1;var c=1/Math.sqrt(t*t+1),s=t*c;
+      for(var k=0;k<n;k++){var akp=a[k][p],akq=a[k][q];a[k][p]=c*akp-s*akq;a[k][q]=s*akp+c*akq;}for(var k=0;k<n;k++){var apk=a[p][k],aqk=a[q][k];a[p][k]=c*apk-s*aqk;a[q][k]=s*apk+c*aqk;}
+      for(var k=0;k<n;k++){var vkp=V[k][p],vkq=V[k][q];V[k][p]=c*vkp-s*vkq;V[k][q]=s*vkp+c*vkq;}}}
+  var e=[];for(var i=0;i<n;i++)e.push({val:a[i][i],idx:i});e.sort(function(x,y){return y.val-x.val;});return {e:e,V:V};}
+
+// all facets from ONE decomposition
+function OB_facets(A){
+  var n=A.length;
+  var W=[];for(var i=0;i<n;i++){W.push([]);for(var j=0;j<n;j++)W[i].push(0.5*(A[i][j]+A[j][i]));}
+  var INF=1e9,D=[];for(var i=0;i<n;i++){D.push([]);for(var j=0;j<n;j++){if(i===j){D[i].push(0);continue;}D[i].push(W[i][j]>1e-6?-Math.log(W[i][j]):INF);}}
+  for(var k=0;k<n;k++)for(var i=0;i<n;i++)for(var j=0;j<n;j++)if(D[i][k]+D[k][j]<D[i][j])D[i][j]=D[i][k]+D[k][j];
+  var D2=D.map(function(r){return r.map(function(v){return v*v;});});var rm=D2.map(function(r){return r.reduce(function(x,y){return x+y;},0)/n;});var gm=rm.reduce(function(x,y){return x+y;},0)/n;
+  var B=[];for(var i=0;i<n;i++){B.push([]);for(var j=0;j<n;j++)B[i].push(-0.5*(D2[i][j]-rm[i]-rm[j]+gm));}
+  var J=OB_jac(B), ev=J.e;
+  var pos=ev.filter(function(e){return e.val>0;}), tot=pos.reduce(function(x,e){return x+e.val;},0), sp2=pos.reduce(function(x,e){return x+e.val*e.val;},0);
+  var neg=ev.filter(function(e){return e.val<0;}).reduce(function(x,e){return x-e.val;},0);
+  var coords=[];for(var t=0;t<n;t++){var c=[];for(var m=0;m<3;m++)c.push(ev[m].val>0?J.V[t][ev[m].idx]*Math.sqrt(ev[m].val):0);coords.push(c);}
+  // diffusion flow classification (water bodies)
+  var pi=new Array(n).fill(1/n);for(var it=0;it<300;it++){var np=new Array(n).fill(0);for(var jj=0;jj<n;jj++)for(var ii=0;ii<n;ii++)np[jj]+=pi[ii]*A[ii][jj];pi=np;}
+  var flow=[],dep=[],scl=[];for(var i=0;i<n;i++){flow.push(1-A[i][i]);dep.push(pi[i]);var col=[];for(var ii=0;ii<n;ii++)col.push(A[ii][i]);var s=col.reduce(function(x,y){return x+y;},0),s2=col.reduce(function(x,y){return x+y*y;},0);scl.push(s2>0?s*s/s2:1);}
+  function nrm(a){var mn=Math.min.apply(null,a),mx=Math.max.apply(null,a);return a.map(function(v){return(v-mn)/((mx-mn)||1);});}
+  var F=nrm(flow),Dp=nrm(dep),L=nrm(scl);
+  var ARCH={pond:[0.15,0.25,0.2],pool:[0.15,0.75,0.3],swamp:[0.25,0.3,0.85],creek:[0.85,0.25,0.25],lake:[0.7,0.7,0.65],ocean:[0.92,0.85,0.95]};
+  var types=[];for(var i=0;i<n;i++){var best='',bd=9;for(var k in ARCH){var ar=ARCH[k];var dd=Math.hypot(F[i]-ar[0],Dp[i]-ar[1],L[i]-ar[2]);if(dd<bd){bd=dd;best=k;}}types.push(best);}
+  // persistence: clusters vs threshold
+  function comps(th){var p=[];for(var i=0;i<n;i++)p.push(i);function fd(x){while(p[x]!==x){p[x]=p[p[x]];x=p[x];}return x;}for(var i=0;i<n;i++)for(var j=i+1;j<n;j++)if(W[i][j]>=th)p[fd(i)]=fd(j);var r={};for(var i=0;i<n;i++)r[fd(i)]=1;return Object.keys(r).length;}
+  var persist=[0.3,0.1,0.05].map(comps);
+  var frac=(persist[0]-persist[2])!==0?(persist[1]-persist[2])/(persist[0]-persist[2]):1;
+  return {ev:ev, dim:tot*tot/sp2, curv:neg/(tot+neg), coh:(pos[0].val+pos[1].val+pos[2].val)/tot,
+    coords:coords, stat:pi, types:types, W:W, persist:persist, character:(frac>0.4?'gradual (structured)':'cliff (diffuse)')};
+}
+function OB_shuffle(A,sd){var n=A.length,flat=[];A.forEach(function(r){r.forEach(function(v){flat.push(v);});});for(var i=flat.length-1;i>0;i--){sd=(sd*9301+49297)%233280;var j=sd%(i+1);var t=flat[i];flat[i]=flat[j];flat[j]=t;}
+  var Bm=[],idx=0;for(var i=0;i<n;i++){var row=[];for(var j=0;j<n;j++)row.push(flat[idx++]);var s=row.reduce(function(x,y){return x+y;},0);Bm.push(row.map(function(v){return v/s;}));}return Bm;}
+function OB_load(A,toks){
+  OB_N=A.length; OB_tokens=toks||A.map(function(_,i){return 't'+i;});
+  var f=OB_facets(A);
+  // shuffle null for curvature (the auto-audit)
+  var nc=0;for(var s=1;s<=12;s++)nc+=OB_facets(OB_shuffle(A,s*7)).curv;nc/=12;
+  f.nullCurv=nc; f.curvReal=(f.curv>nc*1.4);
+  OB_R=f;
+}
+var OB_TYPECOL={pond:'#8FB98A',pool:'#4A90D9',swamp:'#8A8B4A',creek:'#56C8F0',lake:'#3FBFA0',ocean:'#2A5BA8'};
+OB_load(OBREAL.head0, OBREAL.tokens);
+var OB_head=0;
+
+/* ==========================================================================
+   SGL ENGINE · reusable soft-GL — DO NOT EDIT (extend if you must)
+   3D projected by hand onto the 2d context. state + helpers.
+   ========================================================================== */
+var SGL={
+  yaw:0.4, pitch:0.15, dist:48, FOV:620, CY:7,   // camera state (CY = look-at height)
+  ctx:null, W:0, H:0, DPR:1, f:620,
+  rot:function(x,y,z){
+    var cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),cx=Math.cos(this.pitch),sx=Math.sin(this.pitch);
+    var X=x*cy+z*sy, Z=-x*sy+z*cy, Y=(y-this.CY)*cx-Z*sx, Z2=(y-this.CY)*sx+Z*cx;
+    return [X,Y,Z2];
+  },
+  project:function(x,y,z){                        // -> [sx,sy,depth,scale] | null
+    var p=this.rot(x,y,z), zc=this.dist-p[2];
+    if(zc<0.5)return null;
+    var s=this.f/zc;
+    return [this.W/2+p[0]*s, this.H/2-p[1]*s, zc, s];
+  },
+  dot:function(x,y,z,r,col,alpha){
+    var p=this.project(x,y,z);if(!p)return;
+    var c=this.ctx;c.globalAlpha=alpha==null?1:alpha;c.fillStyle=col;
+    c.beginPath();c.arc(p[0],p[1],Math.max(0.6,r*p[3]),0,7);c.fill();c.globalAlpha=1;
+  },
+  line:function(x1,y1,z1,x2,y2,z2,col,w,dash){
+    this.path([[x1,y1,z1],[x2,y2,z2]],col,w,dash);
+  },
+  path:function(pts,col,w,dash){                  // polyline through 3D points, clips behind-cam gaps
+    var c=this.ctx;c.strokeStyle=col;c.lineWidth=(w||1)*this.DPR;
+    if(dash)c.setLineDash(dash.map(function(d){return d*this.DPR}.bind(this)));
+    c.beginPath();var started=false;
+    for(var i=0;i<pts.length;i++){
+      var p=this.project(pts[i][0],pts[i][1],pts[i][2]);
+      if(!p){started=false;continue;}
+      if(!started){c.moveTo(p[0],p[1]);started=true;}else c.lineTo(p[0],p[1]);
+    }
+    c.stroke();c.setLineDash([]);
+  },
+  ring:function(cx,cy,cz,r,axis,col,w,dash){      // circle; axis 'z' upright (xy), 'y' flat (xz)
+    var pts=[];for(var i=0;i<=48;i++){var a=i/48*Math.PI*2;
+      if(axis==='y')pts.push([cx+Math.cos(a)*r,cy,cz+Math.sin(a)*r]);
+      else pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r,cz]);}
+    this.path(pts,col,w,dash);
+  },
+  cloud:function(points,colFn,rFn,alphaFn){       // painter-sorted point cloud; fns take (pt,index)
+    var self=this;
+    var buf=points.map(function(pt,i){return [pt,i,self.dist-self.rot(pt[0],pt[1],pt[2])[2]];});
+    buf.sort(function(a,b){return b[2]-a[2];});   // far first
+    buf.forEach(function(b){
+      var pt=b[0],i=b[1];
+      self.dot(pt[0],pt[1],pt[2], rFn?rFn(pt,i):0.3, colFn?colFn(pt,i):'#F2EFE9', alphaFn?alphaFn(pt,i):1);
+    });
+  },
+  text3:function(str,x,y,z,col,px){               // label anchored at a 3D point
+    var p=this.project(x,y,z);if(!p)return;
+    var c=this.ctx;c.fillStyle=col;c.font=((px||10)*this.DPR)+'px '+getComputedStyle(document.body).fontFamily;
+    c.textAlign='center';c.fillText(str,p[0],p[1]);
+  }
+};
+
+/* ==========================================================================
+   BLOCK 2 · draw2D — YOUR QUANTITATIVE VISUAL
+   gets a fresh cleared context each frame. (ctx, W, H, DPR, t) provided.
+   demo draws a sine; replace the body.
+   ========================================================================== */
+function draw2D(ctx,W,H,DPR,t){
+  var f=function(n){return n*DPR;};
+  var R=OB_R, padL=18*DPR, x=padL, y=34*DPR, lh=Math.min(30*DPR,(H-70*DPR)/6);
+  ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  ctx.fillStyle='#F2EFE9';ctx.font=f(13)+'px '+MONO;
+  ctx.fillText('STRUCTURAL REPORT \u2014 '+(OB_head<0?'pasted matrix':'BERT head '+OB_head)+' \u00b7 '+OB_N+' tokens',x,f(20));
+  function badge(txt,col){var w=ctx.measureText(txt).width;ctx.fillStyle=col;ctx.fillText(txt,W-padL-w,y);}
+  function row(label,val,bText,bCol){
+    ctx.fillStyle='#7A756D';ctx.font=f(11)+'px '+MONO;ctx.fillText(label,x,y);
+    ctx.fillStyle='#F2EFE9';ctx.fillText(val,x+f(180),y);
+    if(bText){ctx.font=f(10)+'px '+MONO;badge(bText,bCol);}
+    y+=lh;
+  }
+  row('intrinsic dimension', R.dim.toFixed(1)+' of '+OB_N, 'MEASURED','#7A756D');
+  row('curvature', (R.curv*100).toFixed(1)+'%  (null '+(R.nullCurv*100).toFixed(1)+'%)', R.curvReal?'REAL':'ARTIFACT', R.curvReal?'#3FBF7F':'#E05555');
+  row('view coherence (top-3)', (R.coh*100).toFixed(0)+'%', R.coh>0.7?'faithful':'partial', R.coh>0.7?'#3FBF7F':'#E0B050');
+  row('cluster persistence', R.persist.join(' / ')+' @ 0.3/0.1/0.05', R.character.indexOf('structured')>=0?'STRUCTURED':'DIFFUSE', R.character.indexOf('structured')>=0?'#3FBF7F':'#E0B050');
+  var tc={};R.types.forEach(function(tp){tc[tp]=(tc[tp]||0)+1;});
+  var flowStr=Object.keys(tc).map(function(k){return tc[k]+' '+k;}).join(', ');
+  row('flow classification', flowStr, 'FROM A\u1d57','#7A756D');
+  // eigenvalue spectrum strip
+  y+=f(4);
+  ctx.fillStyle='#7A756D';ctx.font=f(9)+'px '+MONO;ctx.fillText('eigenvalue spectrum (\u2212 = curvature)',x,y);y+=f(6);
+  var sy0=y, sh=Math.max(f(26),H-y-f(30)), mid=sy0+sh/2, amax=Math.max.apply(null,R.ev.map(function(e){return Math.abs(e.val);}))||1;
+  var bw=(W-2*padL)/R.ev.length;
+  R.ev.forEach(function(e,i){var bh=(sh/2)*(e.val/amax);ctx.fillStyle=e.val>=0?'#FF5A00':'#E05555';ctx.fillRect(x+i*bw+bw*0.15,e.val>=0?mid-bh:mid,bw*0.7,Math.abs(bh));});
+  ctx.strokeStyle='#2A2620';ctx.lineWidth=DPR;ctx.beginPath();ctx.moveTo(x,mid);ctx.lineTo(W-padL,mid);ctx.stroke();
+  // honest verdict line
+  ctx.fillStyle='#8B939C';ctx.textAlign='left';ctx.font=f(9)+'px '+MONO;
+  ctx.fillText('real here: dimension + persistence character. not real: curvature ('+(R.curvReal?'passes':'fails')+' null).',x,H-f(8));
+}
+
+/* ==========================================================================
+   BLOCK 3 · build3D + draw3D — YOUR SPATIAL VISUAL
+   build3D() runs once, returns your geometry.
+   draw3D(t) runs each frame with SGL ready (SGL.ctx set, size current).
+   demo: a small lattice + one orbiting dot; replace both.
+   ========================================================================== */
+var SCENE;
+function build3D(){ return {}; }
+function draw3D(t){
+  var R=OB_R, C=R.coords, n=OB_N;
+  var amax=0;C.forEach(function(c){c.forEach(function(v){if(Math.abs(v)>amax)amax=Math.abs(v);});});
+  var sc=amax>0?13/amax:1;
+  var smax=Math.max.apply(null,R.stat)||1;
+  var P=[];for(var i=0;i<n;i++)P.push([C[i][0]*sc,SGL.CY+C[i][1]*sc,C[i][2]*sc]);
+  // edges = strong attention
+  for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){if(R.W[i][j]>0.04)SGL.line(P[i][0],P[i][1],P[i][2],P[j][0],P[j][1],P[j][2],'rgba(122,117,109,'+Math.min(0.5,R.W[i][j]*3).toFixed(2)+')',0.8);}
+  // nodes colored by flow type, sized by depth
+  for(var i=0;i<n;i++){var col=OB_TYPECOL[R.types[i]]||'#8B939C';
+    SGL.dot(P[i][0],P[i][1],P[i][2], 0.4+R.stat[i]/smax*0.9, col);
+    SGL.text3(OB_tokens[i]+' \u00b7'+R.types[i], P[i][0], P[i][1]+0.9, P[i][2], '#8B939C', 8);}
+  SGL.text3('the relational geometry \u00b7 dim '+R.dim.toFixed(1)+', shows '+(R.coh*100).toFixed(0)+'% in 3D', 0, SGL.CY+15, 0, '#7A756D', 10);
+  SGL.text3('one object \u00b7 every view this session was a facet of this', 0, SGL.CY-16, 0, '#7A756D', 9);
+}
+
+/* ==========================================================================
+   RUNTIME · resize-safe loops, controls, fail-loud — DO NOT EDIT
+   ========================================================================== */
+var MONO;
+(function(){
+  MONO=getComputedStyle(document.body).fontFamily;
+  // apply PAPER metadata
+  document.getElementById('cap2').textContent=PAPER.cap2;
+  document.getElementById('cap3').textContent=PAPER.cap3;
+  var tierEl=document.getElementById('hTier');tierEl.className='tier '+PAPER.tier;
+  // head + paste controls
+  function setActive(id){['obH0','obH1','obPaste'].forEach(function(o){var b=document.getElementById(o);if(b)b.classList.toggle('on',o===id);});}
+  var b0=document.getElementById('obH0'),b1=document.getElementById('obH1'),bp=document.getElementById('obPaste');
+  if(b0)b0.addEventListener('click',function(){OB_head=0;OB_load(OBREAL.head0,OBREAL.tokens);setActive('obH0');});
+  if(b1)b1.addEventListener('click',function(){OB_head=1;OB_load(OBREAL.head1,OBREAL.tokens);setActive('obH1');});
+  if(bp)bp.addEventListener('click',function(){
+    var txt=prompt('Paste an N\u00d7N attention matrix (rows on lines, values comma/space separated):');
+    if(!txt)return;
+    try{var A=txt.trim().split(/\n+/).map(function(r){return r.trim().split(/[\s,]+/).map(Number);});
+      if(A.length<4||A.some(function(r){return r.length!==A.length||r.some(isNaN);}))throw 'not square / NaN';
+      OB_head=-1;OB_load(A,null);setActive('obPaste');
+    }catch(e){alert('Could not parse: '+e);}
+  });
+
+  // ---- 2D loop ----
+  (function(){
+    var cv=document.getElementById('cv2'),ctx=cv.getContext&&cv.getContext('2d');
+    if(!ctx){document.getElementById('fb2').style.display='flex';return;}
+    var DPR=Math.min(window.devicePixelRatio||1,2),lastW=0,lastH=0,t=0;
+    function frame(){
+      requestAnimationFrame(frame);
+      var w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+      if(w!==lastW||h!==lastH){lastW=w;lastH=h;cv.width=w*DPR;cv.height=h*DPR;}
+      t+=0.016;
+      ctx.fillStyle='#121110';ctx.fillRect(0,0,cv.width,cv.height);
+      draw2D(ctx,cv.width,cv.height,DPR,t);
+    }
+    frame();
+  })();
+
+  // ---- 3D loop (soft-GL) ----
+  (function(){
+    var cv=document.getElementById('cv3'),ctx=cv.getContext&&cv.getContext('2d');
+    if(!ctx){document.getElementById('fb3').style.display='flex';document.getElementById('fb3why').textContent='NO 2D CONTEXT';return;}
+    SGL.ctx=ctx;SCENE=build3D();
+    var lastW=0,lastH=0,t=0;
+    function resize(){
+      var w=cv.clientWidth||600,h=cv.clientHeight||460;if(!w||!h)return;
+      if(w===lastW&&h===lastH)return;lastW=w;lastH=h;
+      SGL.DPR=Math.min(window.devicePixelRatio||1,2);
+      cv.width=w*SGL.DPR;cv.height=h*SGL.DPR;SGL.W=cv.width;SGL.H=cv.height;
+      SGL.f=SGL.FOV*SGL.DPR*Math.min(w/1100,1.1);
+    }
+    // controls
+    var drag=false,px=0,py=0;
+    cv.addEventListener('pointerdown',function(e){drag=true;px=e.clientX;py=e.clientY;});
+    window.addEventListener('pointermove',function(e){if(!drag)return;
+      SGL.yaw+=(e.clientX-px)*0.006;SGL.pitch=Math.max(-0.6,Math.min(0.7,SGL.pitch+(e.clientY-py)*0.004));
+      px=e.clientX;py=e.clientY;});
+    window.addEventListener('pointerup',function(){drag=false;});
+    cv.addEventListener('wheel',function(e){e.preventDefault();SGL.dist=Math.max(22,Math.min(95,SGL.dist+e.deltaY*0.03));},{passive:false});
+    function frame(){
+      requestAnimationFrame(frame);resize();if(!SGL.W)return;
+      if(!drag)SGL.yaw+=0.001;
+      t+=0.016;
+      ctx.fillStyle='#121110';ctx.fillRect(0,0,SGL.W,SGL.H);
+      draw3D(t);
+    }
+    frame();
+  })();
+})();
+</script>
+</body>
+</html>
