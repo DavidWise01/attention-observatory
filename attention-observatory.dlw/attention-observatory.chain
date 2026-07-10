@@ -1,0 +1,9 @@
+ROOT0-DLW-CHAIN-v1
+index : 1218
+slug  : attention-observatory
+seal  : 954d72288e0e7a6aa7dfc89b9040f878c5adc387b4b306a8bf39c066519e03f0
+prev  : 82abef12bcffc0ebfd80f6d9b7f96a0187dbbbca193ee0b1fc98554b2fa4b7c8
+link  : 5d7d4e4865e486e7e28a0adb86f8036bcd36f5ec72fd2fcd1caf27717b7542bc
+head  : f235a2d0c56b49a77eb8a348b56b8845b7515e8743b25fd4b56b32ac175886ef
+
+— the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
